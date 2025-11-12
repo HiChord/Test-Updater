@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HiChord Test Firmware Updater</title>
+    <style>
+        :root {
+            --black: #0A0A0A;
+            --white: #FAFAFA;
+            --gray: #6B6B6B;
+            --light-gray: #D1D5DB;
+            --lightest-gray: #F3F4F6;
+            --accent: #9333ea;
+            --accent-hover: #7e22ce;
+            --success: #10b981;
+            --warning: #FFB800;
+            --error: #ef4444;
+            --test-purple: #9333ea;
+            --f3-red: #ef4444;
+            --f2-yellow: #FFB800;
+            --f1-gray: #808080;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--white);
+            color: var(--black);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .header h1 sup {
+            font-size: 0.4em;
+            top: -1em;
+        }
+
+        .header p {
+            color: var(--test-purple);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .test-badge {
+            display: inline-block;
+            background: var(--test-purple);
+            color: var(--white);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-top: 8px;
+        }
+
+        .firmware-version {
+            text-align: center;
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: -40px;
+            margin-bottom: 40px;
+        }
+
+        .test-warning {
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border: 2px solid var(--test-purple);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 40px;
+        }
+
+        .test-warning h2 {
+            color: var(--test-purple);
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .test-warning p {
+            color: var(--black);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .step {
+            margin-bottom: 40px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            padding: 16px 20px;
+            border-left: 4px solid var(--test-purple);
+            background: linear-gradient(90deg, #faf5ff 0%, transparent 100%);
+            margin-bottom: 24px;
+        }
+
+        .step-content {
+            padding-left: 20px;
+        }
+
+        .file-upload-area {
+            border: 3px dashed var(--test-purple);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload-area:hover {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border-color: var(--accent-hover);
+        }
+
+        .file-upload-area.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--test-purple);
+        }
+
+        .file-upload-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--test-purple);
+            margin-bottom: 8px;
+        }
+
+        .file-upload-hint {
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .file-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--white);
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 2px solid var(--black);
+            background: var(--white);
+            color: var(--black);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        button.primary {
+            background: var(--test-purple);
+            border-color: var(--test-purple);
+            color: var(--white);
+        }
+
+        button.primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            padding: 20px;
+            background: var(--lightest-gray);
+            border-left: 4px solid var(--warning);
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        #status {
+            font-size: 14px;
+            padding: 12px 16px;
+            background: var(--lightest-gray);
+            color: var(--gray);
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        #downloadLog {
+            min-height: 60px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--lightest-gray);
+            font-size: 13px;
+            margin-top: 16px;
+            border-radius: 4px;
+        }
+
+        #downloadLog p {
+            margin: 4px 0;
+        }
+
+        #downloadLog .info {
+            color: var(--black);
+        }
+
+        #downloadLog .warning {
+            color: var(--warning);
+        }
+
+        #downloadLog .error {
+            color: var(--error);
+        }
+
+        #downloadLog progress {
+            width: 100%;
+            height: 8px;
+            margin: 8px 0;
+        }
+
+        progress {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 4px;
+        }
+
+        progress::-webkit-progress-bar {
+            background: var(--light-gray);
+            border-radius: 4px;
+        }
+
+        progress::-webkit-progress-value {
+            background: var(--test-purple);
+            border-radius: 4px;
+        }
+
+        progress::-moz-progress-bar {
+            background: var(--test-purple);
+            border-radius: 4px;
+        }
+
+        .instructions {
+            font-size: 14px;
+            color: var(--black);
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+        }
+
+        .instructions strong {
+            color: var(--black);
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .footer-links a {
+            color: var(--test-purple);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 15px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-hover);
+        }
+
+        /* Function button icons */
+        .inline-code {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+            background: var(--black);
+            padding: 3px 7px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--white);
+        }
+
+        .inline-code.f1,
+        .inline-code.f2,
+        .inline-code.f3 {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border-radius: 3px;
+            position: relative;
+            vertical-align: middle;
+            margin: 0 3px;
+            font-size: 0;
+            line-height: 0;
+            overflow: hidden;
+            text-indent: -9999px;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .inline-code.f1 {
+            background: var(--f1-gray);
+        }
+
+        .inline-code.f2 {
+            background: var(--f2-yellow);
+        }
+
+        .inline-code.f3 {
+            background: var(--f3-red);
+        }
+
+        .inline-code.f1::before,
+        .inline-code.f2::before,
+        .inline-code.f3::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px;
+            height: 18px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .inline-code.f1::before {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="14" r="3.5"/><line x1="9.5" y1="11.5" x2="18" y2="3"/><line x1="16" y1="5" x2="16" y2="3"/></svg>');
+        }
+
+        .inline-code.f2::before {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,17 3,9 7,9 7,17 11,17 11,9 15,9 15,17 19,17 19,9 21,9"/></svg>');
+        }
+
+        .inline-code.f3::before {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="17" y2="12"/></svg>');
+        }
+
+        .troubleshooting {
+            margin-top: 40px;
+        }
+
+        .troubleshooting details {
+            border: 2px solid var(--light-gray);
+            background: var(--white);
+            transition: all 0.2s;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .troubleshooting details:hover {
+            border-color: var(--gray);
+        }
+
+        .troubleshooting details[open] {
+            border-color: var(--test-purple);
+        }
+
+        .troubleshooting summary {
+            padding: 16px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .troubleshooting summary:hover {
+            background: var(--lightest-gray);
+        }
+
+        .troubleshooting summary::before {
+            content: '▶';
+            display: inline-block;
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: var(--test-purple);
+        }
+
+        .troubleshooting details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .troubleshooting-content {
+            padding: 0 20px 20px 20px;
+            border-top: 1px solid var(--lightest-gray);
+        }
+
+        .troubleshooting h4 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 20px 0 12px 0;
+            color: var(--black);
+        }
+
+        .troubleshooting p {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .troubleshooting ol {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+
+        .troubleshooting li {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.7;
+            margin: 8px 0;
+        }
+
+        .troubleshooting strong {
+            color: var(--black);
+            font-weight: 600;
+        }
+
+        .troubleshooting a {
+            color: var(--test-purple);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .troubleshooting a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .platform-badge {
+            display: inline-block;
+            background: var(--black);
+            color: var(--white);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HiChord<sup>™</sup></h1>
+            <p>TEST FIRMWARE UPDATER</p>
+            <span class="test-badge">DEVELOPMENT ENVIRONMENT</span>
+        </div>
+
+        <div class="test-warning">
+            <h2>⚠️ Test Environment</h2>
+            <p><strong>This is a test updater for development firmware builds.</strong></p>
+            <p>Use this to flash experimental firmware during development. Upload your own <code style="background: var(--lightest-gray); padding: 2px 6px; border-radius: 3px;">hichord_unified.bin</code> file built from <code style="background: var(--lightest-gray); padding: 2px 6px; border-radius: 3px;">.pio/build/unified/</code></p>
+            <p style="margin-top: 12px; color: var(--error); font-weight: 600;">For production firmware updates, use the official updater at <a href="https://hichord.github.io/hichord-updater/" target="_blank" style="color: var(--test-purple);">hichord.github.io/hichord-updater</a></p>
+        </div>
+
+        <div class="firmware-version">
+            Manual Upload Mode - No Version Tracking
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="step">
+            <div class="step-header">
+                <span>1. SELECT TEST FIRMWARE</span>
+            </div>
+            <div class="step-content">
+                <label for="firmwareFile" class="file-upload-area" id="fileUploadArea">
+                    <div class="file-upload-icon">📦</div>
+                    <div class="file-upload-text">Click to select firmware file</div>
+                    <div class="file-upload-hint">or drag and drop your hichord_unified.bin here</div>
+                    <div class="file-info hidden" id="fileInfo"></div>
+                    <input type="file" id="firmwareFile" accept=".bin">
+                </label>
+            </div>
+        </div>
+
+        <!-- Firmware Update Instructions -->
+        <div class="step">
+            <div class="step-header">
+                <span>2. UPDATE FIRMWARE</span>
+            </div>
+            <div class="step-content">
+                <div class="info-box">
+                    <h3>Enter Update Mode</h3>
+                    <div class="instructions">
+                        <ol>
+                            <li>Power on HiChord</li>
+                            <li>Press and <strong>HOLD</strong> all three menu buttons: <span class="inline-code f1">F1</span> + <span class="inline-code f2">F2</span> + <span class="inline-code f3">F3</span> for <strong>5 SECONDS</strong></li>
+                            <li>HiChord display shows: <strong>"Entering DFU Mode"</strong></li>
+                            <li>Connect HiChord via <strong>USB-C</strong> to computer</li>
+                            <li>Click <strong>"Connect"</strong> button below</li>
+                            <li>Browser popup window appears</li>
+                            <li>Select <strong>"Daisy Bootloader"</strong> from device list</li>
+                            <li>Click <strong>"Connect"</strong> in popup window</li>
+                            <li>Click <strong>"Update Firmware"</strong> button below</li>
+                        </ol>
+                        <p style="margin-top: 16px; color: var(--error); font-weight: 600; font-size: 13px;">⚠️ IMPORTANT</p>
+                        <p style="color: var(--gray); font-size: 13px; line-height: 1.5;">Popup must show <strong>"Daisy Bootloader"</strong> (NOT "HiChord" or "HiChord - Paired"). If incorrect device appears: Disconnect USB, repeat <span class="inline-code f1">F1</span> + <span class="inline-code f2">F2</span> + <span class="inline-code f3">F3</span> hold for full 5 seconds.</p>
+                    </div>
+                </div>
+
+                <div id="status">Select firmware file above to begin</div>
+
+                <button id="connect" class="primary" disabled>CONNECT</button>
+                <button id="download" disabled>UPDATE FIRMWARE</button>
+
+                <div id="downloadLog" class="hidden"></div>
+
+                <!-- Troubleshooting -->
+                <div class="troubleshooting">
+                    <details>
+                        <summary>Troubleshooting</summary>
+                        <div class="troubleshooting-content">
+                            <h4>Check Browser</h4>
+                            <p>Make sure you're using <strong>Google Chrome</strong> as your web browser.</p>
+                            <p>While users have reported intermittent success with Firefox and Safari, <strong>Google Chrome is the only officially supported browser</strong> for flashing firmware to HiChord.</p>
+
+                            <h4>Reset USB Driver with Zadig<span class="platform-badge">WINDOWS ONLY</span></h4>
+                            <p>For Windows users, you may need to use <strong>Zadig</strong> to reset your USB driver.</p>
+                            <ol>
+                                <li>Download <a href="https://zadig.akeo.ie/" target="_blank" rel="noopener">Zadig</a> (use the most recent version)</li>
+                                <li>Launch Zadig</li>
+                                <li>Put HiChord into bootloader mode:
+                                    <ul style="list-style-type: disc; margin: 8px 0; padding-left: 20px;">
+                                        <li>Power on HiChord</li>
+                                        <li>Press and <strong>HOLD</strong> all three menu buttons: <span class="inline-code f1">F1</span> + <span class="inline-code f2">F2</span> + <span class="inline-code f3">F3</span> for <strong>5 SECONDS</strong></li>
+                                        <li>HiChord display shows: <strong>"Entering DFU Mode"</strong></li>
+                                        <li>Connect HiChord via <strong>USB-C</strong> to computer</li>
+                                    </ul>
+                                </li>
+                                <li>In Zadig, click <strong>"Options"</strong> menu and select <strong>"List All Devices"</strong></li>
+                                <li>In the dropdown menu, select <strong>"DFU in FS mode"</strong></li>
+                                <li>In the target driver box (right side), select <strong>"WinUSB"</strong>
+                                    <p style="margin-top: 8px; font-size: 13px; font-style: italic;">Note: Do not worry if the box on the left displays "(NONE)" instead of "libusb0".</p>
+                                </li>
+                                <li>Click <strong>"Replace Driver"</strong>. Zadig will update to the appropriate driver to flash HiChord.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="info-box" style="border-left-color: var(--f3-red); background: #FEF2F2; margin-top: 40px;">
+                    <h3>⚠️ BATCH 1 WARNING (KICKSTARTER LAUNCH EDITION)</h3>
+                    <p style="color: var(--black);"><strong>If your HiChord is from Batch 1 (Kickstarter Launch Edition), make sure HiChord is fully charged before updating.</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://hichord.github.io/hichord-updater/" target="_blank">Production Updater</a>
+            <a href="https://hichord.github.io/hichord-manual/" target="_blank">Operation Manual</a>
+            <a href="https://hichord.shop" target="_blank">HiChord.Shop</a>
+        </div>
+    </div>
+
+    <!-- Load DFU libraries in exact Electro-Smith order -->
+    <script src="dfu/dfu.js"></script>
+    <script src="dfu/dfuse.js"></script>
+    <script src="app/dfu-util.js"></script>
+
+    <script>
+        // File upload handling
+        const fileInput = document.getElementById('firmwareFile');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const connectBtn = document.getElementById('connect');
+        const statusDiv = document.getElementById('status');
+
+        fileInput.addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // Drag and drop support
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = 'var(--accent-hover)';
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            if (!fileUploadArea.classList.contains('has-file')) {
+                fileUploadArea.style.borderColor = 'var(--test-purple)';
+            }
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.bin')) {
+                handleFileSelect(file);
+            } else {
+                statusDiv.textContent = 'Please select a .bin firmware file';
+                statusDiv.style.background = '#FEF2F2';
+                statusDiv.style.color = 'var(--error)';
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            if (!file.name.endsWith('.bin')) {
+                statusDiv.textContent = 'Error: Please select a .bin file';
+                statusDiv.style.background = '#FEF2F2';
+                statusDiv.style.color = 'var(--error)';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                firmwareFile = e.target.result;
+
+                // Update UI
+                fileUploadArea.classList.add('has-file');
+                fileInfo.classList.remove('hidden');
+                const sizeKB = (file.size / 1024).toFixed(2);
+                fileInfo.textContent = `✓ ${file.name} (${sizeKB} KB)`;
+
+                connectBtn.disabled = false;
+                statusDiv.textContent = 'Firmware loaded - Ready to connect';
+                statusDiv.style.background = '#f0fdf4';
+                statusDiv.style.color = 'var(--success)';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
